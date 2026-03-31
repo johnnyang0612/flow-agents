@@ -280,6 +280,140 @@ Pushed to: origin/main
 
 ---
 
+## Self-Service: Auto-Handle What You Can
+
+Before declaring a BLOCKER, the Coordinator and agents MUST try to self-service:
+
+### Auth & Credentials
+
+```
+Step 1: Check if gcloud auth is already valid
+  → Bash: gcloud auth print-access-token 2>/dev/null
+  → If token returned → auth is VALID, proceed without stopping
+
+Step 2: Check environment variables
+  → Read .env, .env.local, .env.production
+  → Read CLAUDE.md for documented credentials
+  → Read .pipeline/config.json for project-specific secrets
+  → If DATABASE_URL exists → use it
+
+Step 3: Check GCP Secret Manager access
+  → Bash: gcloud secrets list --project=rallygo-prod 2>/dev/null
+  → If works → can access secrets, proceed
+
+Step 4: Only BLOCK if truly interactive
+  → gcloud auth login → needs browser interaction → BLOCK
+  → MFA prompt → needs human → BLOCK
+  → Password input → needs human → BLOCK
+  → Everything else → try to handle automatically
+```
+
+### Database Connection
+
+```
+Step 1: Check if Cloud SQL Proxy is already running
+  → Bash: lsof -i :5433 2>/dev/null || netstat -an | grep 5433
+  → If port open → proxy is running, proceed
+
+Step 2: Check if direct connection works
+  → Read DATABASE_URL from env
+  → If available → use it
+
+Step 3: Only BLOCK for production migration
+  → Creating migration FILE → do it yourself, no block
+  → Running `prisma migrate deploy` on PRODUCTION → BLOCK (admin must do this)
+  → Running on local/dev → do it yourself
+```
+
+### Deploy
+
+```
+Step 1: Check gcloud auth
+  → If valid → deploy automatically using project's cloudbuild configs
+
+Step 2: Check if correct project is set
+  → Bash: gcloud config get-value project
+  → If wrong → gcloud config set project rallygo-prod
+
+Step 3: Deploy
+  → Bash: powershell -Command "gcloud builds submit --config=cloudbuild-xxx.yaml --project=rallygo-prod"
+  → Monitor build status
+```
+
+### Summary: When to BLOCK vs Self-Service
+
+| Situation | Action |
+|-----------|--------|
+| gcloud token valid | **Self-service** — just deploy |
+| gcloud token expired | **BLOCK** — user must `gcloud auth login` |
+| DATABASE_URL in env | **Self-service** — connect directly |
+| Cloud SQL Proxy running | **Self-service** — use existing connection |
+| Need to run migration on prod | **BLOCK** — user must run manually |
+| Creating migration file | **Self-service** — just create it |
+| Need MFA/password input | **BLOCK** — user must intervene |
+| npm/pnpm install | **Self-service** — just run it |
+| Build/test/lint | **Self-service** — just run it |
+
+---
+
+## Notification System
+
+When the pipeline needs to notify the admin (completion, blocker, escalation), use ALL enabled notification methods from `.pipeline/config.json`:
+
+### Method 1: File (always on)
+
+```bash
+# Append to .pipeline/notifications.md
+echo "## [TIMESTAMP] {EVENT_TYPE}: {summary}" >> .pipeline/notifications.md
+```
+
+### Method 2: LINE Push Message
+
+If `notifications.methods[type=line].enabled == true`:
+
+```bash
+curl -X POST https://api.line.me/v2/bot/message/push \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {channelAccessToken}" \
+  -d '{
+    "to": "{adminUserId}",
+    "messages": [{
+      "type": "text",
+      "text": "🔔 Pipeline {EVENT_TYPE}\n\nSession: {SESSION-ID}\n{summary}\n\n{action_required_or_empty}"
+    }]
+  }'
+```
+
+Notification events:
+
+| Event | LINE Message |
+|-------|-------------|
+| Pipeline complete | `✅ Pipeline Complete\n{summary}\nCommit: {hash}` |
+| Blocker (auth) | `⚠️ Pipeline Blocked\n需要: gcloud auth login\n請處理後執行 /flow resume` |
+| Blocker (migration) | `⚠️ DB Migration 待執行\n{migration file path}\n其他工作已完成` |
+| Escalation (3x fail) | `🚨 Pipeline 需要介入\n{SESSION-ID} 已失敗 3 次\n請查看 review report` |
+| Error | `❌ Pipeline Error\n{error details}` |
+
+### Method 3: Webhook (Slack, Discord, etc.)
+
+If `notifications.methods[type=webhook].enabled == true`:
+
+```bash
+curl -X POST {webhook_url} \
+  -H "Content-Type: application/json" \
+  -d '{"text": "{EVENT_TYPE}: {summary}"}'
+```
+
+### Notification Priority
+
+```
+BLOCKER / ESCALATION → send ALL enabled channels immediately
+COMPLETE             → send ALL enabled channels
+PROGRESS UPDATE      → file only (don't spam LINE)
+```
+
+---
+
 ## Error Handling
 
 | Situation | Action |
@@ -287,12 +421,13 @@ Pushed to: origin/main
 | One pipeline fails, others OK | Complete the others, escalate the failed one |
 | Git conflict between pipelines | Pause later pipeline, merge first, then continue |
 | Agent process crashes | Retry once from same phase |
-| Auth needed | Pause ALL pipelines, notify user, resume all after |
-| DB migration | Continue pipelines, list as blocker in final report |
+| Auth expired | Try refresh first → if fails → BLOCK + notify LINE |
+| DB migration needed | Create file, continue, notify at end |
+| Deploy fails | Check auth → retry once → if still fails → BLOCK + notify |
 
 ## The User's Role
 
 1. **Give requirements** — drop files in inbox, or `/flow <description>`
-2. **Handle auth** — when Coordinator says BLOCKED
-3. **Run DB migrations** — when final report says PENDING
-4. **That's it**
+2. **Handle auth** — ONLY when LINE says "需要 gcloud auth login"
+3. **Run production DB migrations** — ONLY when LINE says "Migration 待執行"
+4. **That's it** — everything else is automatic
