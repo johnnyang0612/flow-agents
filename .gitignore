@@ -5,3 +5,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Bot
+bot/node_modules/
+bot/.env
