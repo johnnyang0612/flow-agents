@@ -1,0 +1,5 @@
+# Agent Pipeline workspace (logs and handoffs are local-only)
+.pipeline/logs/
+.pipeline/handoffs/
+.pipeline/status.json
+.pipeline/notifications.md

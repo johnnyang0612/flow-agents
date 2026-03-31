@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "{{PROJECT_NAME}}",
+    "stack": "{{STACK}}",
+    "monorepo": false,
+    "apps": [],
+    "deployTarget": "{{DEPLOY_TARGET}}"
+  },
+  "pipeline": {
+    "agents": {
+      "0-coordinator": { "command": "/flow", "status": "ready" },
+      "1-analyst": { "command": "/flow-analyze", "status": "ready" },
+      "2-architect": { "command": "/flow-plan", "status": "ready" },
+      "3-builder": { "command": "/flow-build", "status": "ready" },
+      "4-reviewer": { "command": "/flow-review", "status": "ready" },
+      "5-researcher": { "command": "/flow-research", "status": "ready" }
+    },
+    "currentSession": null,
+    "totalSessions": 0,
+    "maxCycles": 3
+  },
+  "notifications": {
+    "method": "file",
+    "target": ".pipeline/notifications.md"
+  },
+  "createdAt": "{{TIMESTAMP}}",
+  "lastActive": "{{TIMESTAMP}}"
+}
