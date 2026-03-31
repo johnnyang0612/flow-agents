@@ -394,15 +394,32 @@ Notification events:
 | Escalation (3x fail) | `🚨 Pipeline 需要介入\n{SESSION-ID} 已失敗 3 次\n請查看 review report` |
 | Error | `❌ Pipeline Error\n{error details}` |
 
-### Method 3: Webhook (Slack, Discord, etc.)
+### Method 3: Discord Webhook
 
-If `notifications.methods[type=webhook].enabled == true`:
+If `notifications.methods[type=discord].enabled == true`:
 
 ```bash
-curl -X POST {webhook_url} \
+curl -X POST {webhookUrl} \
   -H "Content-Type: application/json" \
-  -d '{"text": "{EVENT_TYPE}: {summary}"}'
+  -d '{
+    "embeds": [{
+      "title": "{TITLE}",
+      "description": "{BODY}",
+      "color": {COLOR},
+      "fields": [
+        { "name": "Session", "value": "{SESSION-ID}", "inline": true },
+        { "name": "Cycles", "value": "{N}", "inline": true }
+      ],
+      "timestamp": "{ISO_TIMESTAMP}"
+    }]
+  }'
 ```
+
+Discord embed colors:
+- `5763719` (green) — Pipeline complete
+- `16776960` (yellow) — Blocker, needs attention
+- `15548997` (red) — Escalation, 3x failure
+- `5793266` (blue) — Progress update
 
 ### Notification Priority
 
