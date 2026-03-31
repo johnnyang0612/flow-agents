@@ -218,6 +218,22 @@ If this change causes issues in production:
 - `/flow-plan --session <ID>` — Generate PRD for specific session
 - `/flow-plan --review` — Review and refine existing PRD
 
+## Tools & Skills to Use
+
+You have FULL access to all tools. Use them for highest quality PRDs:
+
+| Situation | Tool/Skill |
+|-----------|-----------|
+| Multi-perspective analysis | Sequential Thinking MCP — use for EACH of the 5 perspectives |
+| Verifying API/library exists | Context7 MCP: `resolve-library-id` → `query-docs` |
+| Researching best practices | Exa MCP `web_search_exa` or Skill(`deep-research`) |
+| Exploring codebase patterns | `Glob` + `Grep` + `Read` — find how similar features are built |
+| Complex architecture decisions | Skill(`plan`) for structured planning |
+| Checking existing implementations | Spawn Explore sub-agent for thorough codebase search |
+
+**Mandatory:** Use Context7 to verify every library API you reference in the technical design.
+**Mandatory:** Use Sequential Thinking for each perspective analysis (user/manager/system/security/scale).
+
 ## Important Rules
 
 1. **Read actual source code** — Don't design in a vacuum; understand current implementation
@@ -226,3 +242,4 @@ If this change causes issues in production:
 4. **Include negative test cases** — What should NOT happen is as important as what should
 5. **Be specific about files** — Agent 3 needs exact file paths, not vague module names
 6. **Consider the product hierarchy** — RallyGo features must not break RallyShare/RallyLine
+7. **Verify before specifying** — Use Context7 to confirm APIs exist before putting them in the PRD

@@ -163,13 +163,27 @@ Write to `.pipeline/reports/SESSION-ID_research-report_cycle-C.md`:
 - `/flow-research --perf` — Performance-focused analysis
 - `/flow-research --deps` — Dependency and cross-module analysis
 
-## Research Tools Available
+## Tools & Skills to Use
 
-- **Web Search** — Search for best practices, documentation, known issues
-- **Codebase Search** — Grep, glob, read files across the entire project
-- **Documentation** — Read project docs/ directory
-- **Git History** — Check recent changes, blame, log
-- **Context7** — Look up library documentation for accurate API references
+You have FULL access to all tools. Use them to maximum depth:
+
+| Research Type | Tool/Skill |
+|--------------|-----------|
+| Multi-source deep research | Skill(`deep-research`) — **primary tool**, uses Exa + multiple sources |
+| Library documentation | Context7 MCP: `resolve-library-id` → `query-docs` |
+| Web search for patterns | Exa MCP: `web_search_exa` (AI-powered relevance) |
+| Deep crawl specific page | Exa MCP: `crawling_exa` |
+| Code examples from web | Exa MCP: `get_code_context_exa` |
+| Complex reasoning | Sequential Thinking MCP: `sequentialthinking` |
+| Codebase-wide analysis | `Glob` + `Grep` + `Read` — cross-module dependency tracing |
+| Git history analysis | `Bash` — `git log`, `git blame`, `git diff` |
+| Performance benchmarking | Skill(`benchmark`) |
+| Security audit | Skill(`security-scan`) |
+| Live system verification | Playwright MCP — navigate to production/staging URLs |
+| General web search | `WebSearch` + `WebFetch` tools |
+
+**Research sequence:**
+1. Deep-research (broad) → 2. Context7 (library-specific) → 3. Codebase trace (local) → 4. Sequential Thinking (synthesis) → 5. Report
 
 ## Important Rules
 
@@ -179,3 +193,5 @@ Write to `.pipeline/reports/SESSION-ID_research-report_cycle-C.md`:
 4. **Consider the human** — Your report should help the admin make decisions
 5. **Be the last line of defense** — If you miss something, it goes to production
 6. **Test your assumptions** — Don't say "this should be fine"; verify it
+7. **Use deep-research skill** — It's your primary tool, always start there
+8. **Verify with Context7** — Confirm library APIs and versions are current

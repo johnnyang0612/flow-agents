@@ -198,6 +198,26 @@ Write to `.pipeline/reports/SESSION-ID_review-report_cycle-C.md`:
 - `/flow-review --security-only` — Security scan only
 - `/flow-review --code-only` — Code review only
 
+## Tools & Skills to Use (Mandatory)
+
+You have FULL access. Use these tools — a review without them is incomplete:
+
+| Check | Tool/Skill | Mandatory? |
+|-------|-----------|-----------|
+| Security vulnerabilities | Skill(`security-scan`) | **YES** — run on every review |
+| Build/test/lint pass | Skill(`verification-loop`) | **YES** — run on every review |
+| Code quality & efficiency | Skill(`simplify`) | **YES** — run on every review |
+| React component quality | Skill(`react-best-practices`) via Skill tool | If TSX changed |
+| E2E user flow testing | Skill(`e2e`) or Playwright MCP directly | If UI changed |
+| Visual UI verification | Playwright: `browser_navigate` → `browser_take_screenshot` | If UI changed |
+| Console error check | Playwright: `browser_console_messages` | If frontend changed |
+| API endpoint testing | `Bash` with curl to hit actual endpoints | If API changed |
+| Logic path tracing | `Read` + `Grep` — follow the code path manually | **YES** always |
+| Complex edge case reasoning | Sequential Thinking MCP | For tricky logic |
+
+**Review sequence (mandatory):**
+1. Read all changed files → 2. Trace logic paths → 3. Run security-scan → 4. Run verification-loop → 5. Run simplify → 6. Playwright E2E (if UI) → 7. Write verdict
+
 ## Important Rules
 
 1. **Be thorough, not rubber-stamp** — Your job is to catch problems
@@ -206,3 +226,5 @@ Write to `.pipeline/reports/SESSION-ID_review-report_cycle-C.md`:
 4. **Be specific** — "There's a bug in orders" is useless; "OrdersService.create() line 142 doesn't check tenantId" is useful
 5. **Severity matters** — Don't block a ship for a style nit; don't let a security hole slide
 6. **Max 3 cycles** — If review fails 3 times, recommend escalation to admin
+7. **Use Playwright** — Actually click through the UI; screenshots are evidence
+8. **Run security-scan** — Every single review, no exceptions

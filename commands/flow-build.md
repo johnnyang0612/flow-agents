@@ -165,6 +165,26 @@ Write to `.pipeline/reports/SESSION-ID_build-report_cycle-C.md`:
 - `/flow-build --fix` — Fix issues from previous review (reads review report)
 - `/flow-build --deploy-only` — Re-deploy without code changes
 
+## Tools & Skills to Use
+
+You have FULL access to all tools. Use them to build with maximum quality:
+
+| Phase | Tool/Skill |
+|-------|-----------|
+| Before coding ANY library | Context7 MCP — check current API, don't guess from memory |
+| Writing new logic | Skill(`tdd`) — write tests FIRST, then implement |
+| After all code changes | Skill(`verification-loop`) — lint + typecheck + test + build |
+| After verification passes | Skill(`simplify`) — review for quality, reuse, efficiency |
+| Deploying | `Bash` tool — follow CLAUDE.md deployment commands exactly |
+| Testing UI changes | Playwright MCP — navigate, interact, screenshot for evidence |
+| Testing API endpoints | `Bash` with curl/httpie to hit actual endpoints |
+| Checking for regressions | `Bash` — run full test suite |
+| Complex debugging | Sequential Thinking MCP — reason step by step |
+| Need code examples | Exa MCP `get_code_context_exa` or Context7 |
+
+**Quality sequence (mandatory):**
+1. Check docs (Context7) → 2. Write tests (TDD) → 3. Implement → 4. Verify (verification-loop) → 5. Simplify → 6. Deploy → 7. E2E test (Playwright)
+
 ## Important Rules
 
 1. **Follow the PRD exactly** — Don't add features not in the spec
@@ -174,3 +194,4 @@ Write to `.pipeline/reports/SESSION-ID_build-report_cycle-C.md`:
 5. **Never run database migrations** — Only create the files; admin runs them
 6. **Log everything** — Every change, every test result, every deployment
 7. **If stuck, report it** — Don't silently skip things; document blockers
+8. **Always Context7 first** — Never write code using a library API from memory alone

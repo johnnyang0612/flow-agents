@@ -116,6 +116,25 @@ Write the analysis to `.pipeline/inbox/SESSION-ID_analysis.md`:
 - `/flow-analyze <file-path>` — Analyze a specific file
 - `/flow-analyze --session <ID>` — Continue analysis for an existing session
 
+## Tools & Skills to Use
+
+You have FULL access to all tools (running with --dangerously-skip-permissions). Use them:
+
+| Situation | Tool/Skill |
+|-----------|-----------|
+| Reading md/txt files | `Read` tool |
+| Reading PDF documents | `Read` tool (supports PDF with `pages` param) |
+| Viewing screenshots/images | `Read` tool (multimodal — you can see images) |
+| Researching external systems mentioned | Skill(`deep-research`) or Exa MCP `web_search_exa` |
+| Checking library APIs referenced | Context7 MCP: `resolve-library-id` → `query-docs` |
+| Complex multi-factor analysis | Sequential Thinking MCP: `sequentialthinking` |
+| Exploring codebase structure | `Glob` + `Grep` tools, or spawn an Explore sub-agent |
+| Understanding existing code | `Read` tool — actually read the source files |
+| Viewing a live page/UI | Playwright MCP: `browser_navigate` → `browser_snapshot` |
+
+**Always read actual source code** — use Glob to find files, then Read to understand them.
+**Always check Context7** if requirements reference a specific library or framework version.
+
 ## Important Rules
 
 1. **Don't assume** — If something is ambiguous, list it as an open question
@@ -123,3 +142,5 @@ Write the analysis to `.pipeline/inbox/SESSION-ID_analysis.md`:
 3. **Think like the user** — What are they really trying to accomplish?
 4. **Be thorough on edge cases** — This saves Agent 3 from building incomplete solutions
 5. **Map to real code** — Don't just say "the orders module"; say `apps/api/src/orders/orders.service.ts`
+6. **Use Sequential Thinking** for requirements with multiple interacting factors
+7. **Use Context7** to verify any API/library assumptions before documenting them
