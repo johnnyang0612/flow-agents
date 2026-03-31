@@ -421,13 +421,85 @@ Discord embed colors:
 - `15548997` (red) — Escalation, 3x failure
 - `5793266` (blue) — Progress update
 
-### Notification Priority
+### Notification Priority & Agent Communication
 
 ```
-BLOCKER / ESCALATION → send ALL enabled channels immediately
-COMPLETE             → send ALL enabled channels
-PROGRESS UPDATE      → file only (don't spam LINE)
+BLOCKER / ESCALATION → Discord embed (yellow/red) + file
+COMPLETE             → Discord embed (green) + file
+AGENT STATUS UPDATE  → Discord message (every agent posts progress)
 ```
+
+### Agent → Discord Communication Protocol
+
+**Every agent** posts status updates to Discord throughout their work. This creates a real-time log the admin can follow from their phone.
+
+The Coordinator includes this instruction in EVERY agent spawn prompt:
+
+```
+## DISCORD COMMUNICATION
+Read .pipeline/config.json → get discord webhookUrl.
+Post status updates to Discord at key moments using:
+
+curl -s -X POST "{webhookUrl}" -H "Content-Type: application/json" -d '{
+  "embeds": [{
+    "title": "Agent {N}: {role}",
+    "description": "{message}",
+    "color": {color},
+    "fields": [
+      {"name": "Session", "value": "{SESSION}", "inline": true},
+      {"name": "Pipeline", "value": "{pipeline_name}", "inline": true}
+    ],
+    "footer": {"text": "Cycle {C} • Phase {N}"},
+    "timestamp": "{ISO}"
+  }]
+}'
+
+Post at these moments:
+- 🔵 Starting work (color: 3447003 blue)
+- 📋 Key findings/decisions (color: 5793266 teal)
+- ✅ Completed successfully (color: 5763719 green)
+- ❌ Failed / issue found (color: 15548997 red)
+- ⏳ Waiting for dependency (color: 16776960 yellow)
+
+Keep messages concise — one embed per status update, not walls of text.
+```
+
+### Discord Thread per Pipeline (Optional)
+
+If multiple pipelines run simultaneously, the Coordinator creates a Discord thread for each:
+
+```bash
+# Create thread (first message becomes thread starter)
+curl -s -X POST "{webhookUrl}?wait=true" -H "Content-Type: application/json" \
+  -d '{"content": "**Pipeline: {name}** — Session {ID}","thread_name": "Pipeline: {short_name}"}' 
+```
+
+Then agents in that pipeline post to the thread using `thread_id`.
+
+### Remote Commands via GitHub Issue
+
+For remote intervention (when admin is away from terminal):
+
+1. Coordinator creates a GitHub Issue at pipeline start:
+   ```
+   Title: [Pipeline] SESSION-ID — {summary}
+   Body: Pipeline started. Comment commands below:
+         - `approve` — approve and continue
+         - `pause` — pause all pipelines
+         - `resume` — resume paused pipelines  
+         - `abort` — abort pipeline
+         - `skip-review` — skip current review cycle
+         - `priority:{high|low}` — change priority
+   ```
+
+2. Coordinator periodically checks the issue for new comments:
+   ```bash
+   gh api repos/{owner}/{repo}/issues/{number}/comments --jq '.[-1].body'
+   ```
+
+3. When a command is found, execute it.
+
+This works from GitHub mobile app — no bot needed.
 
 ---
 
@@ -442,9 +514,22 @@ PROGRESS UPDATE      → file only (don't spam LINE)
 | DB migration needed | Create file, continue, notify at end |
 | Deploy fails | Check auth → retry once → if still fails → BLOCK + notify |
 
+## Discord as Primary Communication & Log System
+
+Discord messages are **permanent and searchable**. This means:
+
+1. **Discord IS the conversation log** — all agent communication goes to Discord
+2. **`.pipeline/logs/` is a local backup** — still write to files, but Discord is the source of truth
+3. **No separate log querying needed** — admin searches Discord to find past work
+4. **Full audit trail** — every decision, handoff, and result is in Discord with timestamps
+
+When admin runs `/flow history`, also mention: "Full logs are in Discord channel."
+
 ## The User's Role
 
 1. **Give requirements** — drop files in inbox, or `/flow <description>`
-2. **Handle auth** — ONLY when LINE says "需要 gcloud auth login"
-3. **Run production DB migrations** — ONLY when LINE says "Migration 待執行"
-4. **That's it** — everything else is automatic
+2. **Watch Discord** — see agent progress in real-time from anywhere
+3. **Handle auth** — ONLY when Discord says "需要 gcloud auth login"
+4. **Run production DB migrations** — ONLY when Discord says "Migration 待執行"
+5. **Remote commands** — comment on GitHub Issue to intervene
+6. **That's it** — everything else is automatic
