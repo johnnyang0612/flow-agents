@@ -421,13 +421,25 @@ Discord embed colors:
 - `15548997` (red) — Escalation, 3x failure
 - `5793266` (blue) — Progress update
 
-### Notification Priority & Agent Communication
+### Two-Channel Discord Architecture
 
 ```
-BLOCKER / ESCALATION → Discord embed (yellow/red) + file
-COMPLETE             → Discord embed (green) + file
-AGENT STATUS UPDATE  → Discord message (every agent posts progress)
+#pipeline-notifications (alerts only — admin watches this)
+  → Pipeline complete ✅
+  → Blocker needs attention ⚠️
+  → Escalation / failure 🚨
+
+#pipeline-logs (all agent chatter — admin checks when curious)
+  → Agent started 🔵
+  → Agent findings / progress 📋
+  → Agent completed ✅
+  → Handoff between agents 🔄
+  → Coordinator routing decisions 🧭
 ```
+
+Read `.pipeline/config.json` → `notifications.methods`:
+- `discord-alerts` → important events only (complete, blocker, escalation, error)
+- `discord-logs` → all agent activity (start, progress, complete, handoff, routing)
 
 ### Agent → Discord Communication Protocol
 
